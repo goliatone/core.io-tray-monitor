@@ -1,0 +1,38 @@
+{
+  "name": "core.io-tray-monitor",
+  "version": "0.0.0",
+  "description": "core.io Tray monitor",
+  "main": "index.js",
+  "scripts": {
+    "start": "electron .",
+    "package": "electron-packager ./ --platform=darwin --arch=x64 --out=out --icon=./icon.icns --overwrite",
+    "test": "bogota",
+    "dtest": "watch bogota test/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/goliatone/core.io-tray-monitor.git"
+  },
+  "keywords": [],
+  "author": "goliatone <hello@goliatone.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/goliatone/core.io-tray-monitor/issues"
+  },
+  "homepage": "https://github.com/goliatone/core.io-tray-monitor#readme",
+  "dependencies": {
+    "electron-positioner": "^3.0.0",
+    "gextend": "^0.3.0"
+  },
+  "devDependencies": {
+    "bogota": "^2.0.4",
+    "electron-packager": "^9.0.1",
+    "electron-prebuilt": "^1.4.13",
+    "nyc": "^10.3.2",
+    "sinon": "^2.2.0",
+    "tap-spec": "^4.1.1",
+    "tape": "^4.6.3",
+    "tape-catch": "^1.0.6",
+    "watch": "^1.0.2"
+  }
+}
