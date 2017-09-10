@@ -3,6 +3,22 @@
 macOS Electron application for the core.io registry.
 
 
+
+### Development
+
+To run the application execute the command:
+
+```
+$ npm start
+```
+
+### Build & Package
+To package the application execute the command:
+
+```
+$ npm run package
+```
+
 <!--
 Electron Tips
 
@@ -18,6 +34,7 @@ https://github.com/electron-userland/electron-packager
 sample apps:
 https://github.com/maxogden/monu
 https://github.com/maxogden/menubar
+https://github.com/ryanbaer/simple-electron-app
 -->
 
 
