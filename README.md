@@ -25,6 +25,13 @@ Autoupdater:
 server: https://github.com/webtorrent/webtorrent.io/blob/master/server/desktop-api.js
 client:
 https://github.com/webtorrent/webtorrent-desktop/blob/62cb304971cb867e5923044df9b7afa2c5f35e78/main/updater.js
+https://github.com/marcbachmann/electron-rpc
+
+
+Sample Apps:
+localhost server: https://github.com/teseve/teseve
+docker ind: https://github.com/khornberg/docker-indicator
+
 
 Electron Tips
 
