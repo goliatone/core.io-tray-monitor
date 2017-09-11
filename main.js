@@ -18,12 +18,13 @@ function initialize(app){
      */
     app.dock.hide();
 
-
-
     //This should happen after user sets configuration
     //we should manage options, load from local store, etc
-    pubsub.init(app, {
-        url: 'mqtt://54.92.199.157:1883'
+    ipcMain.on('ui:options', (e, options) => {
+        console.log('ui:options', options);
+        if(options.mqtt) {
+            pubsub.init(app, options);
+        }
     });
 
     /*
