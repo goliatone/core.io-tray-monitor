@@ -5,7 +5,7 @@
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "package": "electron-packager ./ --platform=darwin --arch=x64 --out=build --icon=./assets/Icons.icns --overwrite",
+    "package": "electron-packager ./ --platform=darwin --arch=x64 --out=build --icon=./assets/Icons.icns --appname='Tray Manager' --overwrite",
     "test": "bogota",
     "dtest": "watch bogota test/"
   },
