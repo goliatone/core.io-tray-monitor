@@ -1,29 +1,45 @@
 'use strict';
 
-const {app, BrowserWindow, ipcMain, Tray, nativeImage} = require('electron');
 const path = require('path');
+const pubsub = require('./lib/pubsub');
+
+const {app, BrowserWindow, ipcMain, Tray, nativeImage} = require('electron');
 
 let tray, window;
+
 const assetsDir = path.join(__dirname, 'assets');
 
-/*
- * Don't show the app in the doc
- */
-app.dock.hide();
+initialize(app);
 
-/*
- * This event is triggered once Electron is ready
- * to run our code, it's effectively the main
- * method of our Electron app.
- */
-app.on('ready', () => {
-    createTray();
-    createWindow();
-});
 
-ipcMain.on('show-window', () => {
-    showWindow();
-});
+function initialize(app){
+    /*
+     * Don't show the app in the doc
+     */
+    app.dock.hide();
+
+
+
+    //This should happen after user sets configuration
+    //we should manage options, load from local store, etc
+    pubsub.init(app, {
+        url: 'mqtt://54.92.199.157:1883'
+    });
+
+    /*
+     * This event is triggered once Electron is ready
+     * to run our code, it's effectively the main
+     * method of our Electron app.
+     */
+    app.on('ready', () => {
+        app.tray = createTray();
+        app.window = createWindow();
+    });
+
+    ipcMain.on('show-window', () => {
+        showWindow();
+    });
+}
 
 function createTray(){
     tray = new Tray(path.join(assetsDir, 'IconTemplate.png'));
@@ -35,14 +51,16 @@ function createTray(){
         toggleWindow();
 
         /*
-         * Show devtools when CMD + CLICK
+         * Show devtools when CTRL + CLICK
          */
-        if(window.isVisible() && process.defaultApp && event.metaKey){
+        if(window.isVisible() && process.defaultApp && event.ctrlKey){
             window.openDevTools({
-                model: 'detach'
+                mode: 'detach'
             });
         }
     });
+
+    return tray;
 }
 
 function toggleWindow(){
@@ -80,6 +98,8 @@ function createWindow(){
         if(window.webContents.isDevToolsOpened()) return;
         window.hide();
     });
+
+    return window;
 }
 
 function showWindow() {
