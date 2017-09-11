@@ -15,4 +15,16 @@ document.addEventListener('DOMContentLoaded', () => {
     n.onclick = () => {
         ipcRenderer.send('show-window');
     };
+
+    ipcRenderer.on('update', (type, event)=>{
+        console.log('update', type, event);
+        log(event.record.appId);
+    });
+
+    function log(txt){
+        let content = document.getElementById('content');
+        content.innerHTML += `<h3>${txt}</h3>`;
+    }
+
+    log('Initialize!');
 });
