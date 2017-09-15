@@ -30,6 +30,7 @@
     "bogota": "^2.0.4",
     "electron-packager": "^9.0.1",
     "electron-prebuilt": "^1.4.13",
+    "electron-reload": "^1.2.1",
     "nyc": "^10.3.2",
     "sinon": "^2.2.0",
     "tap-spec": "^4.1.1",
