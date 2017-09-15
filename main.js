@@ -9,6 +9,8 @@ let tray, window;
 
 const assetsDir = path.join(__dirname, 'assets');
 
+require('electron-reload')(path.join(__dirname, 'app'));
+
 initialize(app);
 
 
@@ -90,7 +92,7 @@ function createWindow(){
         }
     });
 
-    window.loadURL(`file://${path.join(__dirname, 'index.html')}`);
+    window.loadURL(`file://${path.join(__dirname, 'app', 'index.html')}`);
 
     /*
      * Hide window when it loses focus
