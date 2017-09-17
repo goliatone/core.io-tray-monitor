@@ -15,6 +15,13 @@ initialize(app);
 
 
 function initialize(app){
+
+    /*
+     * This should be a randon ID first time,
+     * create and load from config.
+     */
+    app.id = Date.now();
+
     /*
      * Don't show the app in the doc
      */
@@ -26,8 +33,21 @@ function initialize(app){
         console.log('ui:options', options);
         if(options.mqtt) {
             pubsub.init(app, options);
+
+            app.pubsub.publish('ww/registry/list', {
+                response: `ww/registry/${app.id}/list`
+            });
+
+            app.pubsub.subscribe(`ww/registry/${app.id}/list`, (t, e) => {
+                console.log('Updated list of devices', t, e);
+                app.window.webContents.send('update.list' , e);
+            });
         }
     });
+
+    // app.on('pubsub.ready', ()=>{
+    //     pubsub.publish('ww/registry/list');
+    // });
 
     /*
      * This event is triggered once Electron is ready
@@ -58,8 +78,8 @@ function createTray(){
         /*
          * Show devtools when CTRL + CLICK
          */
-        if(window.isVisible() && process.defaultApp && event.ctrlKey){
-            window.openDevTools({
+        if(app.window.isVisible() && process.defaultApp && event.ctrlKey){
+            app.window.openDevTools({
                 mode: 'detach'
             });
         }
