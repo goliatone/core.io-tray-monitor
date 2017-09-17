@@ -39,8 +39,10 @@ function initialize(app){
         app.window = createWindow();
     });
 
-    ipcMain.on('show-window', () => {
-        showWindow();
+    ipcMain.on('show-window', (e, options={}) => {
+        console.log('arguments', arguments.length);
+        console.log(e, options);
+        showWindow(options);
     });
 }
 
@@ -105,9 +107,13 @@ function createWindow(){
     return window;
 }
 
-function showWindow() {
+function showWindow(options={}) {
     const position = getWindowPosition();
     window.setPosition(position.x, position.y, false);
+    if(options && options.size){
+        window.setSize(options.size.w, options.size.h);
+    }
+
     window.show();
     window.focus();
 }
@@ -117,7 +123,8 @@ function getWindowPosition(){
     const trayBounds = tray.getBounds();
 
     const x = Math.round(trayBounds.x + (trayBounds.width / 2) - (windowBounds.width / 2));
-    const y = Math.round(trayBounds.y + trayBounds.height + 4);
+    const yoffset = 0;
+    const y = Math.round(trayBounds.y + trayBounds.height + yoffset);
 
     return {x, y};
 }
