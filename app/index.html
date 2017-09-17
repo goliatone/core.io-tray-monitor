@@ -2,22 +2,15 @@
 
 <head>
     <title>Sample Menubar App</title>
-    <script charset="utf-8">
-        require('./index')
-    </script>
 </head>
+<link rel="stylesheet" href="css/style.css">
 <script id="template" type="text/ractive">
 </script>
+<script charset="utf-8">
+    require('./index')
+</script>
 <body>
-    <div></div>
-    <center>
-        <h1>core.io Tray Monitor</h1></center>
-
     <div id="content"></div>
-    <div id="options">
-        <input id="mqtt" type="text" placeholder="mqtt://test.mosquitto.org"/>
-        <button id="send">Send</button>
-    </div>
 </body>
 
 </html>
