@@ -1,6 +1,6 @@
 'use strict';
 
-const {ipcRenderer} = require('electron');
+const {ipcRenderer, shell} = require('electron');
 
 const Ractive = require('./vendors/ractive.min');
 
@@ -9,31 +9,165 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const Instance = Ractive.extend({
         template: `
-            <li class="sevice-{{item.online ? 'up' : 'down'}}">
-                <a href="http://{{item.hostname}}:{{item.server.port}}">{{item.appId}}</a>
-            </li>
+            <div on-click="showDetails" class="card service-{{item.online ? 'up' : 'down'}}">
+                <div class="heading">
+                    <a on-click="doOpen">
+                        {{item.appId}}
+                    </a>
+                </div>
+                <div class="uptime">
+                    <span class="label">{{@this.getUptimeLabel()}} is now </span>
+                    <span class="time">{{@this.getTime()}}</span>
+                </div>
+            </div>
         `,
+        onrender: function(){
+            window.page = this;
+            this.on('doOpen', function(){
+                console.log('click', this.get('item.health.url'));
+                shell.openExternal(this.get('item.health.url'));
+            });
+            this.on('showDetails', function(){
+                this.parent.set('activeInstance', this.get('item'));
+            });
+        },
+        getUptimeLabel: function(){
+            return this.get('online') ? 'Uptime' : 'Downtime';
+        },
+        getTime: function(){
+            return '03min'
+        },
         attributes: {
             required: [ 'item' ]
         }
     });
 
+
     let App = new Ractive({
         el: 'content',
         append: true,
         template: `
-            <ul>
+            <div id="home" class="active page">
             {{#each instances}}
                 <Instance item="{{this}}" />
             {{/each}}
-            </ul>
+                <div class="toolbar">
+                    <span on-click="showSettings" class="icon gear">
+                        <img src="images/gear_icon.svg"/>
+                    </span>
+                </div>
+            </div>
+            <div id="details" class="page">
+                <h2>{{activeInstance.appId}}</h2>
+                <div class="line">
+                    Hostname: {{activeInstance.hostname}}
+                </div>
+                <div class="line">
+                    Uptime: {{@this.getUptime(activeInstance.appId)}}
+                </div>
+                <div class="line">
+                    Health: {{activeInstance.health.url}}
+                </div>
+                <div class="line">
+                    Environment: {{activeInstance.environment}}
+                </div>
+                <div class="line">
+                    REPL: {{activeInstance.data.repl.port}}
+                </div>
+                <button on-click="back">Back</button>
+            </div>
+            <div id="settings" class="page">
+                <h2>My Settings Page</h2>
+                <div class="line">
+                    <input id="mqtt" type="text" placeholder="mqtt://test.mosquitto.org"/>
+                </div>
+                <div class="line">
+                <button id="send" on-click="send">Send</button>
+                <button on-click="back">Back</button>
+                </div>
+            </div>
         `,
         components: {
             Instance
         },
+        onrender: function(){
+            this.observe('activeInstance', (n, o, k)=>{
+                let home = this.find('#home').classList;
+                home.remove('active');
+                home.add('hidden');
+                let details = this.find('#details').classList;
+                details.add('active');
+                details.remove('hidden');
+            });
+            this.on('back', ()=>{
+                let details = this.find('.active').classList;
+                details.add('hidden');
+                details.remove('active');
+
+                let home = this.find('#home').classList;
+                home.remove('hidden');
+                home.add('active');
+            });
+
+            this.on('showSettings', ()=>{
+                let details = this.find('.active').classList;
+                details.add('hidden');
+                details.remove('active');
+
+                let home = this.find('#settings').classList;
+                home.remove('hidden');
+                home.add('active');
+            });
+        },
+        getUptime: function(id){
+            return '2d 05h 32min';
+        },
         data: function(){
             return {
-                instances: {}
+                instances: {
+                    "janus-hotdesk": {
+                        "appId": "my-app",
+                        "online": false,
+                        "environment": "staging",
+                        "hostname": "goliatodromo.local",
+                        "data": {
+                            "repl": {
+                                "port": 8989
+                            },
+                            "server": {
+                                "port": 7331
+                            },
+                            "pubsub": {
+                                "url": "mqtt://localhost:7984"
+                            }
+                        },
+                        "health": {
+                            "url": "http://localhost:7331/health",
+                            "interval": 50000
+                        }
+                    },
+                    "janust-dashboard": {
+                        "appId": "janust-dashboard",
+                        online: true,
+                        "environment": "development",
+                        "hostname": "goliatodromo.local",
+                        "data": {
+                            "repl": {
+                                "port": 8989
+                            },
+                            "server": {
+                                "port": 7331
+                            },
+                            "pubsub": {
+                                "url": "mqtt://localhost:7984"
+                            }
+                        },
+                        "health": {
+                            "url": "http://localhost:7331/health",
+                            "interval": 50000
+                        }
+                    }
+                }
             };
         }
     });
@@ -44,14 +178,16 @@ document.addEventListener('DOMContentLoaded', () => {
     let input = document.getElementById('mqtt');
 
     btn.addEventListener('click', (e) => {
-        updateConfig({mqtt: input.value});
+        updateConfig({
+            mqtt: input.value
+        });
     });
 
     ipcRenderer.on('update', (type, event)=>{
         console.log('update', type, event);
         let record = event.record;
         App.set(`instances.${record.appId}`, record);
-        log(event.record.appId);
+        sendNotice(record);
     });
 
     let config = getConfig();
@@ -74,17 +210,26 @@ document.addEventListener('DOMContentLoaded', () => {
         ipcRenderer.send('ui:options', config);
     }
 
-    // let n = new Notification('You did it!', {
-    //     body: 'Nice work.'
-    // });
+    function sendNotice(record) {
+        let note = new Notification('Instance status change!', {
+            body: `${record.appId} is now ${record.online ? 'online' : 'offline'}`
+        });
 
-    /*
-     * Tell the notification to show
-     * the menubar popup window on click
-     */
-    // n.onclick = () => {
-    //     ipcRenderer.send('show-window');
-    // };
+        /*
+         * Tell the notification to show
+         * the menubar popup window on click
+         */
+        note.onclick = () => {
+            ipcRenderer.send('show-window', {
+                size: {
+                    w: 300,
+                    h: 230
+                }
+            });
+        };
+    }
+
+
 
     function log(txt){
         console.log(txt);
