@@ -215,6 +215,15 @@ document.addEventListener('DOMContentLoaded', () => {
         sendNotice(record);
     });
 
+    ipcRenderer.on('update.list', (_, event)=>{
+        console.log('update', _, event);
+        if(event.result){
+            event.result.forEach((record)=>{
+                App.set(`instances.${record.appId}`, record);
+            });
+        }
+    });
+
     let config = getConfig();
 
     if(config){
