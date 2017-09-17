@@ -21,7 +21,7 @@
   },
   "homepage": "https://github.com/goliatone/core.io-tray-monitor#readme",
   "dependencies": {
-    "core.io-pubsub-mqtt": "0.0.3",
+    "core.io-pubsub-mqtt": "*",
     "electron-positioner": "^3.0.0",
     "gextend": "^0.3.0",
     "mqtt": "^2.12.1"
