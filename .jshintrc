@@ -25,6 +25,10 @@
     "node": true,
     "esversion": 6,
     "globals":{
+        "window": true,
+        "localStorage": true,
+        "document": true,
+        "Notification": true,
         "describe": true,
         "it": true
     }
