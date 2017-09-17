@@ -1,5 +1,5 @@
 'use strict';
-
+const path = require('path');
 const {ipcRenderer, shell} = require('electron');
 
 const Ractive = require('./vendors/ractive.min');
@@ -16,13 +16,25 @@ document.addEventListener('DOMContentLoaded', () => {
                     </a>
                 </div>
                 <div class="uptime">
-                    <span class="label">{{@this.getUptimeLabel()}} is now </span>
-                    <span class="time">{{@this.getTime()}}</span>
+                    <span class="label">{{serviceLabel}} is now </span>
+                    <span class="time">{{serviceTime}}</span>
                 </div>
             </div>
         `,
+        computed: {
+            serviceLabel: function(){
+                return this.get('online') ? 'Uptime' : 'Downtime';
+            }
+        },
         onrender: function(){
             window.page = this;
+
+            this.parent.on('time.update', ()=>{
+                this.updateServiceTime();
+            });
+
+            this.updateServiceTime();
+
             this.on('doOpen', function(){
                 console.log('click', this.get('item.health.url'));
                 shell.openExternal(this.get('item.health.url'));
@@ -31,11 +43,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 this.parent.set('activeInstance', this.get('item'));
             });
         },
+        updateServiceTime: function(){
+            let time = this.getTime();
+            this.set('serviceTime', time);
+        },
         getUptimeLabel: function(){
             return this.get('online') ? 'Uptime' : 'Downtime';
         },
         getTime: function(){
-            return '03min'
+            let time = Date.now() - new Date(this.get('item.updatedAt'));
+            return format(time/1000);
         },
         attributes: {
             required: [ 'item' ]
@@ -72,6 +89,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     Environment: {{activeInstance.environment}}
                 </div>
                 <div class="line">
+                    Server: {{activeInstance.data.server.port}}
+                </div>
+                <div class="line">
                     REPL: {{activeInstance.data.repl.port}}
                 </div>
                 <button on-click="back">Back</button>
@@ -91,6 +111,10 @@ document.addEventListener('DOMContentLoaded', () => {
             Instance
         },
         onrender: function(){
+            setInterval(()=>{
+                this.fire('time.update');
+            }, 1000);
+
             this.observe('activeInstance', (n, o, k)=>{
                 let home = this.find('#home').classList;
                 home.remove('active');
@@ -120,53 +144,54 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         },
         getUptime: function(id){
-            return '2d 05h 32min';
+            let time = Date.now() - new Date(this.get(`instances.${id}.updatedAt`));
+            return format(time/1000);
         },
         data: function(){
             return {
                 instances: {
-                    "janus-hotdesk": {
-                        "appId": "my-app",
-                        "online": false,
-                        "environment": "staging",
-                        "hostname": "goliatodromo.local",
-                        "data": {
-                            "repl": {
-                                "port": 8989
-                            },
-                            "server": {
-                                "port": 7331
-                            },
-                            "pubsub": {
-                                "url": "mqtt://localhost:7984"
-                            }
-                        },
-                        "health": {
-                            "url": "http://localhost:7331/health",
-                            "interval": 50000
-                        }
-                    },
-                    "janust-dashboard": {
-                        "appId": "janust-dashboard",
-                        online: true,
-                        "environment": "development",
-                        "hostname": "goliatodromo.local",
-                        "data": {
-                            "repl": {
-                                "port": 8989
-                            },
-                            "server": {
-                                "port": 7331
-                            },
-                            "pubsub": {
-                                "url": "mqtt://localhost:7984"
-                            }
-                        },
-                        "health": {
-                            "url": "http://localhost:7331/health",
-                            "interval": 50000
-                        }
-                    }
+                    // "janus-hotdesk": {
+                    //     "appId": "my-app",
+                    //     "online": false,
+                    //     "environment": "staging",
+                    //     "hostname": "goliatodromo.local",
+                    //     "data": {
+                    //         "repl": {
+                    //             "port": 8989
+                    //         },
+                    //         "server": {
+                    //             "port": 7331
+                    //         },
+                    //         "pubsub": {
+                    //             "url": "mqtt://localhost:7984"
+                    //         }
+                    //     },
+                    //     "health": {
+                    //         "url": "http://localhost:7331/health",
+                    //         "interval": 50000
+                    //     }
+                    // },
+                    // "janust-dashboard": {
+                    //     "appId": "janust-dashboard",
+                    //     online: true,
+                    //     "environment": "development",
+                    //     "hostname": "goliatodromo.local",
+                    //     "data": {
+                    //         "repl": {
+                    //             "port": 8989
+                    //         },
+                    //         "server": {
+                    //             "port": 7331
+                    //         },
+                    //         "pubsub": {
+                    //             "url": "mqtt://localhost:7984"
+                    //         }
+                    //     },
+                    //     "health": {
+                    //         "url": "http://localhost:7331/health",
+                    //         "interval": 50000
+                    //     }
+                    // }
                 }
             };
         }
@@ -211,8 +236,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function sendNotice(record) {
-        let note = new Notification('Instance status change!', {
-            body: `${record.appId} is now ${record.online ? 'online' : 'offline'}`
+        let status = record.online ? 'online' : 'offline';
+        let note = new Notification(`${record.appId} is now ${status}`, {
+            body: 'Instance status change!',
+            // icon: path.join(__dirname, 'images', `${status}.png`)
         });
 
         /*
@@ -248,4 +275,15 @@ function getConfig() {
 
 function saveConfig(c={}) {
     localStorage.setItem('_config', JSON.stringify(c));
+}
+
+function format(seconds){
+    function pad(s){
+        return (s < 10 ? '0' : '') + s;
+    }
+    var hour = Math.floor(seconds / (60*60));
+    var min = Math.floor(seconds % (60*60) / 60);
+    var sec = Math.floor(seconds % 60);
+
+    return pad(hour) + ':' + pad(min) + ':' + pad(sec);
 }
