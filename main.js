@@ -27,27 +27,25 @@ function initialize(app){
      */
     app.dock.hide();
 
+    app.on('pubsub.ready', ()=>{
+        app.pubsub.publish('ww/registry/list', {
+            response: `ww/registry/${app.id}/list`
+        });
+
+        app.pubsub.subscribe(`ww/registry/${app.id}/list`, (t, e) => {
+            console.log('Updated list of devices', t, e);
+            app.window.webContents.send('update.list' , e);
+        });
+    });
+
     //This should happen after user sets configuration
     //we should manage options, load from local store, etc
     ipcMain.on('ui:options', (e, options) => {
         console.log('ui:options', options);
         if(options.mqtt) {
             pubsub.init(app, options);
-
-            app.pubsub.publish('ww/registry/list', {
-                response: `ww/registry/${app.id}/list`
-            });
-
-            app.pubsub.subscribe(`ww/registry/${app.id}/list`, (t, e) => {
-                console.log('Updated list of devices', t, e);
-                app.window.webContents.send('update.list' , e);
-            });
         }
     });
-
-    // app.on('pubsub.ready', ()=>{
-    //     pubsub.publish('ww/registry/list');
-    // });
 
     /*
      * This event is triggered once Electron is ready
