@@ -48,6 +48,8 @@ sample apps:
 https://github.com/maxogden/monu
 https://github.com/maxogden/menubar
 https://github.com/ryanbaer/simple-electron-app
+https://github.com/ningt/iStats
+https://github.com/bluegill/katana
 -->
 
 
