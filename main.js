@@ -28,13 +28,11 @@ function initialize(app){
     app.dock.hide();
 
     app.on('pubsub.ready', ()=>{
-        app.pubsub.publish('ww/registry/list', {
-            response: `ww/registry/${app.id}/list`
-        });
-
-        app.pubsub.subscribe(`ww/registry/${app.id}/list`, (t, e) => {
-            console.log('Updated list of devices', t, e);
+        app.pubsub.request('ww/registry/list').then((e) => {
+            console.log('Updated list of devices', e);
             app.window.webContents.send('update.list' , e);
+        }).catch((err)=>{
+            console.error('Error', err);
         });
     });
 
