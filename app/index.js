@@ -123,6 +123,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 details.add('active');
                 details.remove('hidden');
             });
+
             this.on('back', ()=>{
                 let details = this.find('.active').classList;
                 details.add('hidden');
@@ -216,9 +217,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     ipcRenderer.on('update.list', (_, event)=>{
-        console.log('update', _, event);
+        console.log('update.list');
         if(event.result){
-            event.result.forEach((record)=>{
+            event.result.forEach((record) => {
+                console.log('add record', record.appId);
                 App.set(`instances.${record.appId}`, record);
             });
         }
