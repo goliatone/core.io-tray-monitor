@@ -34,6 +34,14 @@ function initialize(app){
         }).catch((err)=>{
             console.error('Error', err);
         });
+
+        app.pubsub.subscribe('ww/registry/application/update', (topic, message) => {
+            console.log('Handle topic', topic);
+            console.log('message: ', message);
+            const record = message.application;
+            app.window.webContents.send('update', {record});
+            console.log('----');
+        });
     });
 
     //This should happen after user sets configuration
